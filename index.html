@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#07011D]">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>LigaDakbayan — Ormoc City Sports Tournament Management System</title>
+
+  <!-- Google Fonts: Montserrat (Headings) & Inter (Body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Native CSS Keyframe Animations for Instant Tactile Feedback -->
+  <style>
+    @keyframes appPopIn {
+      0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.08); }
+    }
+    .animate-pop-in {
+      animation: appPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .animate-glow {
+      animation: pulseGlow 4s ease-in-out infinite;
+    }
+    /* Touch Feedback & Ripple Physics */
+    .app-press {
+      transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .app-press:active {
+      transform: scale(0.92) !important;
+      filter: brightness(1.2);
+    }
+  </style>
+
+  <!-- React 18 & ReactDOM CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+
+  <!-- Babel Standalone for inline JSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Supabase JS Client v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="h-full text-slate-100 antialiased font-sans bg-[#07011D] flex items-center justify-center p-0 sm:p-4 select-none">
+
+  <!-- Phone Shell Container with Ambient Glow -->
+  <div id="root" class="w-full h-full sm:max-w-md sm:h-[844px] bg-[#0B032D] sm:border sm:border-white/10 sm:rounded-[48px] sm:shadow-[0_0_60px_rgba(255,122,0,0.2)] flex flex-col overflow-hidden relative"></div>
+
+  <script type="text/babel">
+    // =========================================================================
+    // 1. SUPABASE CLIENT & GLOBAL CONSTANTS
+    // =========================================================================
+    const SUPABASE_URL = "https://stmvtlitenuaszhyoupm.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0bXZ0bGl0ZW51YXN6aHlvdXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2OTY4NTIsImV4cCI6MjEwNzI3Mjg1Mn0.zCiu-wqD7YyZf59WDGZnS_O4p2lD0n5sTsEUyWfolQ8";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const IAS_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    const safeAuditLog = async (currentUser, action, details = {}) => {
+      try {
+        if (!currentUser) return;
+        await supabase.from('audit_logs').insert({
+          user_id: currentUser.id,
+          user_email: currentUser.email || currentUser.username,
+          user_role: currentUser.role,
+          action: action,
+          details: details
+        });
+      } catch (e) {}
+    };
+
+    const INITIAL_ORMOC_TEAMS = [
+      { id: 1, name: 'OCCI Team', barangay: 'City Center', wins: 4, losses: 0, points: 8, status: 'Qualified (Rank 1)' },
+      { id: 2, name: 'KNC Team', barangay: 'Brgy. San Jose', wins: 3, losses: 1, points: 7, status: 'Qualified (Rank 2)' },
+      { id: 3, name: 'GP Collection', barangay: 'Brgy. Cogon', wins: 2, losses: 2, points: 6, status: 'Qualified (Rank 3)' },
+    ];
+
+    const INITIAL_BRACKETS = [
+      {
+        round: 'Semi-Final Matchup',
+        matches: [
+          { id: 'm1', team1: 'KNC Team', score1: 89, team2: 'GP Collection', score2: 84, status: 'FINAL', winner: 'KNC Team' },
+        ]
+      },
+      {
+        round: 'Championship Finals',
+        matches: [
+          { id: 'm2', team1: 'OCCI Team', score1: 78, team2: 'KNC Team', score2: 75, status: 'LIVE 4TH QTR', winner: null },
+        ]
+      }
+    ];
+
+    // Helper for accurate default date/time formatting
+    const getFormattedDateTime = (inputDateStr) => {
+      const now = inputDateStr ? new Date(inputDateStr) : new Date();
+      return now.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    };
+
+    // Helper to get datetime string for input type="datetime-local"
+    const getNowForInput = () => {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      return now.toISOString().slice(0, 16);
+    };
+
+    // =========================================================================
+    // 2. REUSABLE UI COMPONENTS
+    // =========================================================================
+
+    function SystemBanner({ notification, onClose }) {
+      if (!notification || !notification.message) return null;
+      const isError = notification.type === 'error';
+      const isSuccess = notification.type === 'success';
+
+      return (
+        <div className={`mx-4 my-2 p-3.5 rounded-2xl border backdrop-blur-xl flex items-start justify-between gap-3 text-xs font-medium shadow-2xl animate-pop-in ${
+          isError ? 'bg-red-950/90 border-red-500/50 text-red-200' :
+          isSuccess ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200' :
+          'bg-[#13093B]/90 border-[#FF7A00]/40 text-slate-200'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            <span className="text-base">{isError ? '⚠️' : isSuccess ? '✅' : 'ℹ️'}</span>
+            <div className="space-y-0.5">
+              <p className="font-bold uppercase tracking-wider text-[9px] opacity-80 font-heading">
+                {isError ? 'System Alert' : isSuccess ? 'Success' : 'Notice'}
+              </p>
+              <p className="text-xs leading-tight">{notification.message}</p>
+            </div>
+          </div>
+          {onClose && (
+            <button onClick={onClose} className="app-press text-slate-400 hover:text-white font-bold p-1 rounded-lg hover:bg-white/10" type="button">✕</button>
+          )}
+        </div>
+      );
+    }
+
+    function ConfirmModal({ isOpen, title, message, confirmText, confirmStyle, onConfirm, onCancel }) {
+      if (!isOpen) return null;
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07011D]/80 backdrop-blur-md p-4 animate-pop-in">
+          <div className="w-full max-w-xs bg-[#13093B]/95 border border-[#FF7A00]/40 rounded-3xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] text-center space-y-4">
+            <div className="w-12 h-12 bg-[#FF7A00]/10 border border-[#FF7A00]/30 rounded-2xl flex items-center justify-center mx-auto text-[#FF7A00] font-bold text-xl">🚨</div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold font-heading text-white">{title || 'Confirm Action'}</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">{message}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
+              <button onClick={onCancel} className="app-press py-2.5 px-3 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancel</button>
+              <button onClick={onConfirm} className={`app-press py-2.5 px-3 rounded-xl text-xs font-bold font-heading shadow-lg ${confirmStyle === 'danger' ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-[#FF7A00] hover:bg-orange-500 text-slate-950'}`}>
+                {confirmText || 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function LoadingSpinner({ label }) {
+      return (
+        <div className="flex flex-col items-center justify-center py-10 space-y-2 animate-pop-in">
+          <div className="w-7 h-7 border-3 border-[#FF7A00]/20 border-t-[#FF7A00] rounded-full animate-spin"></div>
+          {label && <p className="text-xs text-slate-300 font-medium">{label}</p>}
+        </div>
+      );
+    }
+
+    function StatusBadge({ status }) {
+      const styles = {
+        Pending: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+        Approved: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+        Declined: 'bg-red-500/10 text-red-300 border-red-500/30',
+      }[status] || 'bg-slate-800/80 text-slate-300 border-slate-700';
+
+      return (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold font-heading border ${styles}`}>
+          {status}
+        </span>
+      );
+    }
+
+    // =========================================================================
+    // 3. AUTHENTICATION MODULE
+    // =========================================================================
+    function AuthModule({ onAuthSuccess, showNotification }) {
+      const [activeTab, setActiveTab] = React.useState('login');
+      const [loginUsername, setLoginUsername] = React.useState('');
+      const [loginPassword, setLoginPassword] = React.useState('');
+      const [showLoginPassword, setShowLoginPassword] = React.useState(false);
+      const [loginLoading, setLoginLoading] = React.useState(false);
+
+      const [failedAttempts, setFailedAttempts] = React.useState(0);
+      const [lockoutUntil, setLockoutUntil] = React.useState(null);
+      const [remainingLockoutSecs, setRemainingLockoutSecs] = React.useState(0);
+
+      const [regFullName, setRegFullName] = React.useState('');
+      const [regEmail, setRegEmail] = React.useState('');
+      const [regUsername, setRegUsername] = React.useState('');
+      const [regRole, setRegRole] = React.useState('athlete');
+      const [regPassword, setRegPassword] = React.useState('');
+      const [regConfirmPassword, setRegConfirmPassword] = React.useState('');
+      const [regLoading, setRegLoading] = React.useState(false);
+
+      React.useEffect(() => {
+        let timer = null;
+        if (lockoutUntil) {
+          timer = setInterval(() => {
+            const now = Date.now();
+            const diff = Math.ceil((lockoutUntil - now) / 1000);
+            if (diff <= 0) {
+              setLockoutUntil(null);
+              setRemainingLockoutSecs(0);
+              clearInterval(timer);
+            } else {
+              setRemainingLockoutSecs(diff);
+            }
+          }, 1000);
+        }
+        return () => clearInterval(timer);
+      }, [lockoutUntil]);
+
+      const validations = {
+        length: regPassword.length >= 8,
+        uppercase: /[A-Z]/.test(regPassword),
+        lowercase: /[a-z]/.test(regPassword),
+        number: /\d/.test(regPassword),
+        special: /[@$!%*?&]/.test(regPassword),
+        match: regPassword.length > 0 && regPassword === regConfirmPassword,
+      };
+
+      const handleFillDemo = (username, password) => {
+        setLoginUsername(username);
+        setLoginPassword(password);
+        showNotification(`Loaded demo credentials for @${username}`, 'info');
+      };
+
+      const handleLoginSubmit = async (e) => {
+        e.preventDefault();
+
+        if (lockoutUntil && Date.now() < lockoutUntil) {
+          showNotification(`Account locked due to 3 failed attempts. Try again in ${remainingLockoutSecs}s.`, 'error');
+          return;
+        }
+
+        if (!loginUsername.trim() || !loginPassword) {
+          showNotification('Username and password fields are required.', 'error');
+          return;
+        }
+
+        setLoginLoading(true);
+
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('username', loginUsername)
+            .maybeSingle();
+
+          if (error || !data || data.password !== loginPassword) {
+            const newAttempts = failedAttempts + 1;
+            setFailedAttempts(newAttempts);
+
+            if (newAttempts >= 3) {
+              const lockoutDuration = 30000 * (newAttempts - 2); 
+              const lockTime = Date.now() + lockoutDuration;
+              setLockoutUntil(lockTime);
+              setRemainingLockoutSecs(Math.ceil(lockoutDuration / 1000));
+              showNotification(`3 Failed Attempts! Account locked for ${Math.ceil(lockoutDuration / 1000)} seconds.`, 'error');
+            } else {
+              showNotification(`Invalid credentials. Attempt ${newAttempts}/3 before lockout.`, 'error');
+            }
+            setLoginLoading(false);
+            return;
+          }
+
+          setFailedAttempts(0);
+          setLockoutUntil(null);
+
+          await safeAuditLog(data, 'USER_LOGIN_SUCCESS', { username: data.username, role: data.role, timestamp: getFormattedDateTime() });
+
+          showNotification(`Welcome back, ${data.full_name}!`, 'success');
+          onAuthSuccess(data);
+        } catch (err) {
+          showNotification('Authentication server error. Try again.', 'error');
+        } finally {
+          setLoginLoading(false);
+        }
+      };
+
+      const handleRegisterSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!regFullName.trim() || !regEmail.trim() || !regUsername.trim()) {
+          showNotification('All registration fields are required.', 'error');
+          return;
+        }
+
+        if (!IAS_PASSWORD_REGEX.test(regPassword)) {
+          showNotification('Password must meet all IAS complexity rules.', 'error');
+          return;
+        }
+
+        if (regPassword !== regConfirmPassword) {
+          showNotification('Password confirmation does not match.', 'error');
+          return;
+        }
+
+        setRegLoading(true);
+
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .insert([{
+              full_name: regFullName,
+              email: regEmail,
+              username: regUsername,
+              password: regPassword,
+              role: regRole
+            }])
+            .select()
+            .single();
+
+          if (error) {
+            showNotification('Username or Email already registered.', 'error');
+          } else {
+            await safeAuditLog(data, 'USER_REGISTER', { username: regUsername, role: regRole, timestamp: getFormattedDateTime() });
+            showNotification('Account created successfully! Please sign in.', 'success');
+            setActiveTab('login');
+            setLoginUsername(regUsername);
+          }
+        } catch (err) {
+          showNotification('Registration failed. Try again.', 'error');
+        } finally {
+          setRegLoading(false);
+        }
+      };
+
+      return (
+        <div className="p-5 flex-1 flex flex-col justify-center space-y-4 animate-pop-in relative">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-56 h-56 bg-[#FF7A00]/20 rounded-full blur-3xl pointer-events-none animate-glow"></div>
+
+          <div className="text-center space-y-1 relative z-10">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#FF7A00]/10 border border-[#FF7A00]/30 text-[#FF7A00] font-black text-2xl shadow-[0_0_20px_rgba(255,122,0,0.2)] mb-1">
+              🔥
+            </div>
+            <h1 className="text-2xl font-black font-heading tracking-tight text-white">Liga<span className="text-[#FF7A00]">Dakbayan</span></h1>
+            <p className="text-[11px] text-slate-300 font-medium">Ormoc City Sports Management System</p>
+          </div>
+
+          <div className="grid grid-cols-2 p-1 bg-[#13093B]/80 backdrop-blur-md rounded-2xl border border-[#FF7A00]/20 relative z-10">
+            <button type="button" onClick={() => setActiveTab('login')} className={`app-press py-2 text-xs font-extrabold font-heading rounded-xl ${activeTab === 'login' ? 'bg-[#FF7A00] text-slate-950 shadow-lg' : 'text-slate-300 hover:text-white'}`}>
+              Sign In
+            </button>
+            <button type="button" onClick={() => setActiveTab('register')} className={`app-press py-2 text-xs font-extrabold font-heading rounded-xl ${activeTab === 'register' ? 'bg-[#FF7A00] text-slate-950 shadow-lg' : 'text-slate-300 hover:text-white'}`}>
+              Sign Up
+            </button>
+          </div>
+
+          {activeTab === 'login' && (
+            <form onSubmit={handleLoginSubmit} className="space-y-3 relative z-10 animate-pop-in">
+              {lockoutUntil && (
+                <div className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl text-[11px] text-red-200 text-center font-semibold animate-pulse">
+                  🔒 Account Locked! Try again in <span className="font-mono text-sm font-bold">{remainingLockoutSecs}s</span>
+                </div>
+              )}
+
+              <div className="p-2.5 bg-[#13093B]/90 border border-[#FF7A00]/30 rounded-2xl space-y-1.5 shadow-md">
+                <p className="text-[10px] font-bold font-heading text-[#FF7A00] text-center">⚡ Quick Demo Role Sign-In</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleFillDemo('admin_ormoc', 'Admin123!')}
+                    className="app-press py-1.5 px-1.5 bg-[#0B032D] hover:bg-[#FF7A00]/20 border border-[#FF7A00]/30 rounded-xl text-[9px] font-bold text-slate-200 truncate"
+                  >
+                    👑 Admin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFillDemo('organizer_danhug', 'Organizer123!')}
+                    className="app-press py-1.5 px-1.5 bg-[#0B032D] hover:bg-[#FF7A00]/20 border border-[#FF7A00]/30 rounded-xl text-[9px] font-bold text-slate-200 truncate"
+                  >
+                    📋 Organizer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFillDemo('occi_captain', 'Player123!')}
+                    className="app-press py-1.5 px-1.5 bg-[#0B032D] hover:bg-[#FF7A00]/20 border border-[#FF7A00]/30 rounded-xl text-[9px] font-bold text-slate-200 truncate"
+                  >
+                    🏀 Athlete
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-200 mb-1 font-heading">Username</label>
+                <input 
+                  type="text" 
+                  disabled={!!lockoutUntil}
+                  value={loginUsername} 
+                  onChange={(e) => setLoginUsername(e.target.value)} 
+                  placeholder="e.g., athlete_user" 
+                  className="w-full px-3.5 py-2.5 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:border-[#FF7A00] disabled:opacity-50" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-200 mb-1 font-heading">Password</label>
+                <div className="relative">
+                  <input 
+                    type={showLoginPassword ? 'text' : 'password'} 
+                    disabled={!!lockoutUntil}
+                    value={loginPassword} 
+                    onChange={(e) => setLoginPassword(e.target.value)} 
+                    placeholder="••••••••" 
+                    className="w-full pl-3.5 pr-12 py-2.5 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:border-[#FF7A00] disabled:opacity-50" 
+                  />
+                  <button type="button" onClick={() => setShowLoginPassword(!showLoginPassword)} className="app-press absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">
+                    {showLoginPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={loginLoading || !!lockoutUntil} 
+                className="app-press w-full py-3 bg-[#FF7A00] hover:bg-orange-500 text-slate-950 font-black font-heading text-xs rounded-xl shadow-[0_4px_20px_rgba(255,122,0,0.3)] disabled:opacity-50"
+              >
+                {loginLoading ? 'Authenticating...' : 'Sign In'}
+              </button>
+            </form>
+          )}
+
+          {activeTab === 'register' && (
+            <form onSubmit={handleRegisterSubmit} className="space-y-2 max-h-[400px] overflow-y-auto pr-1 relative z-10 animate-pop-in">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Full Name</label>
+                <input type="text" value={regFullName} onChange={(e) => setRegFullName(e.target.value)} placeholder="Juan Dela Cruz" className="w-full px-3 py-2 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Email Address</label>
+                <input type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} placeholder="juan@example.com" className="w-full px-3 py-2 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Username</label>
+                <input type="text" value={regUsername} onChange={(e) => setRegUsername(e.target.value)} placeholder="juan_athlete" className="w-full px-3 py-2 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Account Role</label>
+                <select value={regRole} onChange={(e) => setRegRole(e.target.value)} className="w-full px-3 py-2 bg-[#13093B] border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none">
+                  <option value="athlete">Athlete / Player</option>
+                  <option value="organizer">Barangay Sports Committee</option>
+                  <option value="admin">LGU Sports Coordinator</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Password</label>
+                <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Confirm Password</label>
+                <input type="password" value={regConfirmPassword} onChange={(e) => setRegConfirmPassword(e.target.value)} placeholder="••••••••" className="w-full px-3 py-2 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]" />
+              </div>
+
+              <div className="p-2 bg-[#13093B]/90 rounded-xl border border-[#FF7A00]/20 space-y-1 text-[10px]">
+                <p className="font-bold text-slate-300 font-heading">Password Requirements:</p>
+                <div className="grid grid-cols-2 gap-0.5 font-mono text-[9px] text-slate-400">
+                  <span className={validations.length ? 'text-[#FF7A00] font-bold' : ''}>{validations.length ? '✓' : '•'} Min 8 chars</span>
+                  <span className={validations.uppercase ? 'text-[#FF7A00] font-bold' : ''}>{validations.uppercase ? '✓' : '•'} Uppercase</span>
+                  <span className={validations.lowercase ? 'text-[#FF7A00] font-bold' : ''}>{validations.lowercase ? '✓' : '•'} Lowercase</span>
+                  <span className={validations.number ? 'text-[#FF7A00] font-bold' : ''}>{validations.number ? '✓' : '•'} Number</span>
+                  <span className={validations.special ? 'text-[#FF7A00] font-bold' : ''}>{validations.special ? '✓' : '•'} Special (@$!%*?&)</span>
+                  <span className={validations.match ? 'text-[#FF7A00] font-bold' : ''}>{validations.match ? '✓' : '•'} Match</span>
+                </div>
+              </div>
+
+              <button type="submit" disabled={regLoading} className="app-press w-full py-2.5 bg-[#FF7A00] hover:bg-orange-500 text-slate-950 font-black font-heading text-xs rounded-xl shadow-[0_4px_20px_rgba(255,122,0,0.3)]">
+                {regLoading ? 'Registering Account...' : 'Register Account'}
+              </button>
+            </form>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 4. LIVE BRACKETS & STANDINGS MODULE
+    // =========================================================================
+    function OrmocZoneSchedule() {
+      const [viewTab, setViewTab] = React.useState('brackets');
+
+      return (
+        <div className="p-4 space-y-4 animate-pop-in">
+          <div className="text-center space-y-1 border-b border-[#FF7A00]/20 pb-3">
+            <h3 className="text-xs font-black font-heading text-white uppercase tracking-wider flex items-center justify-center gap-1.5">
+              <span>🏆</span> Ormoc City Basketball Championship
+            </h3>
+            <p className="text-[10px] text-slate-300">Live Brackets & Leaderboard (3 Ormoc Teams)</p>
+          </div>
+
+          <div className="grid grid-cols-2 p-1 bg-[#13093B]/80 rounded-2xl border border-[#FF7A00]/20 text-[10px] font-heading font-extrabold">
+            <button onClick={() => setViewTab('brackets')} className={`app-press py-2 rounded-xl ${viewTab === 'brackets' ? 'bg-[#FF7A00] text-slate-950 shadow-md' : 'text-slate-300'}`}>
+              🏀 Live Brackets
+            </button>
+            <button onClick={() => setViewTab('standings')} className={`app-press py-2 rounded-xl ${viewTab === 'standings' ? 'bg-[#FF7A00] text-slate-950 shadow-md' : 'text-slate-300'}`}>
+              📊 Team Standings
+            </button>
+          </div>
+
+          {viewTab === 'brackets' && (
+            <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1 animate-pop-in">
+              {INITIAL_BRACKETS.map((stage, idx) => (
+                <div key={idx} className="space-y-2">
+                  <div className="flex items-center justify-between border-b border-[#FF7A00]/20 pb-1">
+                    <span className="text-[11px] font-black font-heading text-[#FF7A00] uppercase">{stage.round}</span>
+                    <span className="text-[9px] text-slate-400">Ormoc Superdome</span>
+                  </div>
+
+                  {stage.matches.map((m) => (
+                    <div key={m.id} className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-2xl space-y-2 shadow-lg hover:border-[#FF7A00]/60 transition-all">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                        <span>Match #{m.id}</span>
+                        <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] ${m.status.includes('LIVE') ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
+                          ● {m.status}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className={`flex items-center justify-between p-2 rounded-xl border ${m.winner === m.team1 ? 'bg-[#FF7A00]/20 border-[#FF7A00] text-white font-bold' : 'bg-[#0B032D]/80 border-slate-700/60 text-slate-200'}`}>
+                          <span className="text-xs font-heading">{m.team1}</span>
+                          <span className="font-mono text-sm font-black">{m.score1}</span>
+                        </div>
+
+                        <div className={`flex items-center justify-between p-2 rounded-xl border ${m.winner === m.team2 ? 'bg-[#FF7A00]/20 border-[#FF7A00] text-white font-bold' : 'bg-[#0B032D]/80 border-slate-700/60 text-slate-200'}`}>
+                          <span className="text-xs font-heading">{m.team2}</span>
+                          <span className="font-mono text-sm font-black">{m.score2}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {viewTab === 'standings' && (
+            <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl overflow-hidden shadow-xl animate-pop-in">
+              <div className="p-3 bg-[#0B032D]/80 border-b border-[#FF7A00]/30 flex items-center justify-between">
+                <span className="text-xs font-extrabold font-heading text-white">Ormoc League Leaderboard</span>
+                <span className="text-[9px] bg-[#FFC700]/20 text-[#FFC700] px-2.5 py-0.5 rounded-full font-bold">Season 2026</span>
+              </div>
+              <div className="divide-y divide-[#FF7A00]/10 text-xs">
+                {INITIAL_ORMOC_TEAMS.map((team, index) => (
+                  <div key={team.id} className="p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
+                    <div className="flex items-center space-x-2.5">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] ${index === 0 ? 'bg-[#FFC700] text-slate-950 shadow-[0_0_10px_rgba(255,199,0,0.5)]' : 'bg-[#0B032D] text-slate-300'}`}>
+                        {index + 1}
+                      </span>
+                      <div>
+                        <h4 className="font-bold font-heading text-white">{team.name}</h4>
+                        <p className="text-[10px] text-slate-400">{team.barangay}</p>
+                      </div>
+                    </div>
+                    <div className="text-right font-mono text-[11px]">
+                      <span className="text-[#FF7A00] font-bold">{team.wins}W</span> - <span className="text-slate-400">{team.losses}L</span>
+                      <span className="block text-[9px] text-emerald-400 font-sans font-semibold">{team.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 5. PLAYER / ATHLETE DASHBOARD
+    // =========================================================================
+    function PlayerDashboard({ currentUser, showNotification }) {
+      const [bookings, setBookings] = React.useState([]);
+      const [loading, setLoading] = React.useState(true);
+      const [athleteName, setAthleteName] = React.useState('');
+      const [barangay, setBarangay] = React.useState('');
+      const [category, setCategory] = React.useState('Basketball Men Open');
+      const [contact, setContact] = React.useState('');
+
+      React.useEffect(() => {
+        fetchMyBookings();
+      }, []);
+
+      const fetchMyBookings = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('tournament_applications')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .order('submitted_at', { ascending: false });
+
+        if (!error) setBookings(data || []);
+        setLoading(false);
+      };
+
+      const handleCreateBooking = async (e) => {
+        e.preventDefault();
+        if (!athleteName.trim() || !barangay.trim() || !contact.trim()) {
+          showNotification('All registration fields are required.', 'error');
+          return;
+        }
+
+        const { error } = await supabase.from('tournament_applications').insert({
+          user_id: currentUser.id,
+          athlete_name: athleteName,
+          barangay: barangay,
+          tournament_category: category,
+          contact_number: contact,
+          status: 'Pending',
+        });
+
+        if (error) {
+          showNotification(`Registration failed: ${error.message}`, 'error');
+        } else {
+          showNotification(`Digital Registration submitted for Verification!`, 'success');
+          await safeAuditLog(currentUser, 'SUBMIT_DIGITAL_REGISTRATION', { category, barangay, athleteName, timestamp: getFormattedDateTime() });
+          setAthleteName('');
+          setBarangay('');
+          setContact('');
+          fetchMyBookings();
+        }
+      };
+
+      return (
+        <div className="p-4 space-y-4 animate-pop-in">
+          <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl">
+            <h3 className="text-xs font-bold font-heading text-white flex items-center gap-1.5">
+              <span className="text-[#FF7A00]">📝</span> Step 1: Submit Team / Athlete Roster Entry
+            </h3>
+            
+            <form onSubmit={handleCreateBooking} className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-bold font-heading text-slate-200 mb-1">Team / Athlete Name</label>
+                <input type="text" value={athleteName} onChange={(e) => setAthleteName(e.target.value)} placeholder="e.g., OCCI Team, KNC Team, or GP Collection" className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold font-heading text-slate-200 mb-1">Barangay Residence</label>
+                <input type="text" value={barangay} onChange={(e) => setBarangay(e.target.value)} placeholder="e.g., Brgy. Cogon, Ormoc" className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold font-heading text-slate-200 mb-1">League Category</label>
+                  <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-2.5 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none">
+                    <option value="Basketball Men Open">Basketball Men</option>
+                    <option value="Volleyball Women U-21">Volleyball Women</option>
+                    <option value="Badminton Mixed Doubles">Badminton Mixed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold font-heading text-slate-200 mb-1">Contact Number</label>
+                  <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="09123456789" className="w-full px-2.5 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]" />
+                </div>
+              </div>
+
+              <button type="submit" className="app-press w-full py-2.5 bg-[#FF7A00] hover:bg-orange-500 text-slate-950 font-black font-heading text-xs rounded-xl shadow-md">
+                Submit Registration
+              </button>
+            </form>
+          </div>
+
+          <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl">
+            <h3 className="text-xs font-bold font-heading text-white flex items-center gap-1.5">
+              <span>📋</span> My Submitted Entries
+            </h3>
+
+            {loading ? (
+              <LoadingSpinner label="Fetching registrations..." />
+            ) : bookings.length === 0 ? (
+              <p className="text-[11px] text-slate-400 py-4 text-center">No registrations submitted yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                {bookings.map((b) => (
+                  <div key={b.id} className="p-3 bg-[#0B032D] border border-[#FF7A00]/20 rounded-2xl space-y-1.5 shadow-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-bold text-xs font-heading text-white leading-tight">{b.athlete_name}</p>
+                      <StatusBadge status={b.status} />
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] text-[#FF7A00] font-mono">
+                      <span>{b.tournament_category} • {b.barangay}</span>
+                      <span className="text-slate-300">{b.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 6. BARANGAY ORGANIZER DASHBOARD (WITH DATE/TIME FORM INPUTS)
+    // =========================================================================
+    function OrganizerDashboard({ currentUser, showNotification }) {
+      const [orgSubTab, setOrgSubTab] = React.useState('court');
+      
+      const [courtName, setCourtName] = React.useState('');
+      const [sportType, setSportType] = React.useState('Basketball');
+      const [hourlyRate, setHourlyRate] = React.useState('150');
+      const [courtBarangay, setCourtBarangay] = React.useState('');
+      const [courtDateTime, setCourtDateTime] = React.useState(getNowForInput());
+
+      const [ligaTitle, setLigaTitle] = React.useState('');
+      const [ligaCategory, setLigaCategory] = React.useState('Basketball Men Open');
+      const [ligaDateTime, setLigaDateTime] = React.useState(getNowForInput());
+
+      const [proposals, setProposals] = React.useState([
+        { id: 1, type: 'COURT', title: 'Brgy Cogon Court (₱180/hr) - Basketball', location: 'Brgy Cogon', timestamp: getFormattedDateTime('2026-10-11T15:45'), status: 'Approved' },
+        { id: 2, type: 'LIGA', title: 'LIGA: Intrams @ WLC Gymnasium Complex', timestamp: getFormattedDateTime('2026-10-11T15:45'), status: 'Approved' }
+      ]);
+      const [playerRequests, setPlayerRequests] = React.useState([]);
+      const [loading, setLoading] = React.useState(true);
+
+      React.useEffect(() => {
+        fetchApplications();
+      }, []);
+
+      const fetchApplications = async () => {
+        setLoading(true);
+        const { data } = await supabase
+          .from('tournament_applications')
+          .select('*')
+          .order('submitted_at', { ascending: false });
+
+        setPlayerRequests(data || []);
+        setLoading(false);
+      };
+
+      const handleProposeCourt = async (e) => {
+        e.preventDefault();
+        if (!courtName.trim() || !courtBarangay.trim()) {
+          showNotification('Court Name and Barangay Location are required.', 'error');
+          return;
+        }
+
+        const selectedDateTime = getFormattedDateTime(courtDateTime);
+
+        const newProposal = {
+          id: Date.now(),
+          type: 'COURT',
+          title: `COURT: ${courtName} (₱${hourlyRate}/hr) - ${sportType}`,
+          location: courtBarangay,
+          timestamp: selectedDateTime,
+          status: 'Approved'
+        };
+
+        setProposals([newProposal, ...proposals]);
+        await safeAuditLog(currentUser, 'PROPOSE_COURT', { courtName, hourlyRate, sportType, courtBarangay, timestamp: selectedDateTime });
+        showNotification(`Proposed court "${courtName}" scheduled for ${selectedDateTime}!`, 'success');
+        setCourtName('');
+        setCourtBarangay('');
+      };
+
+      const handleCreateLiga = async (e) => {
+        e.preventDefault();
+        if (!ligaTitle.trim()) {
+          showNotification('Tournament / Liga Title is required.', 'error');
+          return;
+        }
+
+        const selectedDateTime = getFormattedDateTime(ligaDateTime);
+
+        const newProposal = {
+          id: Date.now(),
+          type: 'LIGA',
+          title: `LIGA: ${ligaTitle}`,
+          timestamp: selectedDateTime,
+          status: 'Approved'
+        };
+
+        setProposals([newProposal, ...proposals]);
+        await safeAuditLog(currentUser, 'PROPOSE_LIGA', { ligaTitle, ligaCategory, timestamp: selectedDateTime });
+        showNotification(`Tournament proposal "${ligaTitle}" scheduled for ${selectedDateTime}!`, 'success');
+        setLigaTitle('');
+      };
+
+      const handleOrganizerApprove = async (id, status) => {
+        const { error } = await supabase
+          .from('tournament_applications')
+          .update({ status: status })
+          .eq('id', id);
+
+        if (error) {
+          showNotification(`Action failed: ${error.message}`, 'error');
+        } else {
+          showNotification(`Roster registration ${status} successfully!`, 'success');
+          await safeAuditLog(currentUser, 'ORGANIZER_APPROVAL', { application_id: id, status: status, timestamp: getFormattedDateTime() });
+          fetchApplications();
+        }
+      };
+
+      return (
+        <div className="p-4 space-y-4 animate-pop-in">
+          <div className="grid grid-cols-3 p-1 bg-[#13093B]/80 rounded-2xl border border-[#FF7A00]/30 text-[10px] font-heading font-black text-center">
+            <button
+              type="button"
+              onClick={() => setOrgSubTab('liga')}
+              className={`app-press py-2 rounded-xl flex items-center justify-center gap-1 ${orgSubTab === 'liga' ? 'bg-[#FF7A00] text-slate-950 shadow-lg' : 'text-slate-300'}`}
+            >
+              <span>🏆</span> Create Liga
+            </button>
+            <button
+              type="button"
+              onClick={() => setOrgSubTab('court')}
+              className={`app-press py-2 rounded-xl flex items-center justify-center gap-1 ${orgSubTab === 'court' ? 'bg-[#FF7A00] text-slate-950 shadow-lg' : 'text-slate-300'}`}
+            >
+              <span>🏟️</span> Add Court
+            </button>
+            <button
+              type="button"
+              onClick={() => setOrgSubTab('approvals')}
+              className={`app-press py-2 rounded-xl flex items-center justify-center gap-1 ${orgSubTab === 'approvals' ? 'bg-[#FF7A00] text-slate-950 shadow-lg' : 'text-slate-300'}`}
+            >
+              <span>⚡</span> Approvals
+            </button>
+          </div>
+
+          {orgSubTab === 'court' && (
+            <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl animate-pop-in">
+              <div className="space-y-0.5">
+                <h3 className="text-xs font-extrabold font-heading text-white flex items-center gap-1.5">
+                  <span>🏟️</span> Propose a New Ormoc City Court
+                </h3>
+                <p className="text-[10px] text-slate-400">Newly proposed courts require Admin Approval to appear publicly.</p>
+              </div>
+
+              <form onSubmit={handleProposeCourt} className="space-y-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-200 mb-1 font-heading">Court / Facility Name</label>
+                  <input
+                    type="text"
+                    value={courtName}
+                    onChange={(e) => setCourtName(e.target.value)}
+                    placeholder="e.g., Barangay Cogon Gymnasium"
+                    className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:border-[#FF7A00]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-200 mb-1 font-heading">Sport Type</label>
+                    <select
+                      value={sportType}
+                      onChange={(e) => setSportType(e.target.value)}
+                      className="w-full px-2.5 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none"
+                    >
+                      <option value="Basketball">Basketball</option>
+                      <option value="Volleyball">Volleyball</option>
+                      <option value="Badminton">Badminton</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-200 mb-1 font-heading">Hourly Rate (₱)</label>
+                    <input
+                      type="number"
+                      value={hourlyRate}
+                      onChange={(e) => setHourlyRate(e.target.value)}
+                      placeholder="150"
+                      className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-200 mb-1 font-heading">Location / Barangay</label>
+                  <input
+                    type="text"
+                    value={courtBarangay}
+                    onChange={(e) => setCourtBarangay(e.target.value)}
+                    placeholder="e.g., Brgy. Cogon, Ormoc City"
+                    className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:border-[#FF7A00]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-200 mb-1 font-heading">Scheduled Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={courtDateTime}
+                    onChange={(e) => setCourtDateTime(e.target.value)}
+                    className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="app-press w-full py-2.5 bg-[#FF7A00] hover:bg-orange-500 text-slate-950 font-black font-heading text-xs rounded-xl shadow-md"
+                >
+                  Propose Court for Admin Approval
+                </button>
+              </form>
+            </div>
+          )}
+
+          {orgSubTab === 'liga' && (
+            <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl animate-pop-in">
+              <div className="space-y-0.5">
+                <h3 className="text-xs font-extrabold font-heading text-white flex items-center gap-1.5">
+                  <span>🏆</span> Create Ormoc City Tournament / Liga
+                </h3>
+                <p className="text-[10px] text-slate-400">Host and manage inter-barangay leagues in Ormoc City.</p>
+              </div>
+
+              <form onSubmit={handleCreateLiga} className="space-y-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-200 mb-1 font-heading">Liga / Tournament Title</label>
+                  <input
+                    type="text"
+                    value={ligaTitle}
+                    onChange={(e) => setLigaTitle(e.target.value)}
+                    placeholder="e.g., 2026 Barangay Cogon Summer League"
+                    className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:border-[#FF7A00]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-200 mb-1 font-heading">Tournament Category</label>
+                  <select
+                    value={ligaCategory}
+                    onChange={(e) => setLigaCategory(e.target.value)}
+                    className="w-full px-2.5 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none"
+                  >
+                    <option value="Basketball Men Open">Basketball Men Open</option>
+                    <option value="Volleyball Women U-21">Volleyball Women U-21</option>
+                    <option value="Badminton Mixed Doubles">Badminton Mixed Doubles</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-200 mb-1 font-heading">Tournament Opening Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={ligaDateTime}
+                    onChange={(e) => setLigaDateTime(e.target.value)}
+                    className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="app-press w-full py-2.5 bg-[#FF7A00] hover:bg-orange-500 text-slate-950 font-black font-heading text-xs rounded-xl shadow-md"
+                >
+                  Publish Liga Proposal
+                </button>
+              </form>
+            </div>
+          )}
+
+          {orgSubTab === 'approvals' && (
+            <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl animate-pop-in">
+              <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
+                <h3 className="text-xs font-bold font-heading text-white flex items-center gap-1.5">
+                  <span>⚡</span> Player Verification Requests
+                </h3>
+                <button onClick={fetchApplications} className="app-press text-[10px] text-[#FF7A00] font-heading font-bold">Refresh</button>
+              </div>
+
+              {loading ? (
+                <LoadingSpinner label="Fetching verification requests..." />
+              ) : playerRequests.length === 0 ? (
+                <p className="text-xs text-slate-400 py-6 text-center">No pending registrations for verification.</p>
+              ) : (
+                <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                  {playerRequests.map((req) => (
+                    <div key={req.id} className="p-3 bg-[#0B032D] border border-[#FF7A00]/20 rounded-2xl space-y-2 shadow-sm">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-bold text-xs font-heading text-white">{req.athlete_name}</p>
+                          <p className="text-[10px] text-slate-300">Contact: {req.contact_number}</p>
+                        </div>
+                        <StatusBadge status={req.status} />
+                      </div>
+
+                      <p className="text-xs font-bold text-[#FF7A00]">{req.tournament_category} • {req.barangay}</p>
+
+                      {req.status === 'Pending' && (
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <button onClick={() => handleOrganizerApprove(req.id, 'Approved')} className="app-press py-1.5 bg-[#FF7A00] text-slate-950 font-bold font-heading rounded-xl text-[10px]">Approve</button>
+                          <button onClick={() => handleOrganizerApprove(req.id, 'Declined')} className="app-press py-1.5 bg-red-600/20 text-red-300 border border-red-500/30 font-bold font-heading rounded-xl text-[10px]">Decline</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl">
+            <h3 className="text-xs font-extrabold font-heading text-white flex items-center gap-1.5">
+              <span>📋</span> My Submitted Proposals (Ligas & Courts)
+            </h3>
+
+            <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+              {proposals.map((item) => (
+                <div key={item.id} className="p-3 bg-[#0B032D] border border-[#FF7A00]/20 rounded-2xl flex items-center justify-between gap-2 shadow-sm hover:border-[#FF7A00]/50 transition-all">
+                  <div className="space-y-0.5 truncate">
+                    <p className="font-bold text-xs font-heading text-white truncate leading-tight">
+                      {item.type === 'COURT' ? '🏟️' : '🏆'} {item.title}
+                    </p>
+                    <p className="text-[10px] text-[#FF7A00] font-mono">
+                      {item.location ? `Location: ${item.location} | ` : ''}Date: {item.timestamp}
+                    </p>
+                  </div>
+                  <StatusBadge status={item.status} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 7. COMPREHENSIVE LGU ADMIN DASHBOARD
+    // =========================================================================
+    function AdminDashboard({ currentUser, showNotification }) {
+      const [adminTab, setAdminTab] = React.useState('metrics');
+      const [users, setUsers] = React.useState([]);
+      const [applications, setApplications] = React.useState([]);
+      const [logs, setLogs] = React.useState([]);
+      const [loading, setLoading] = React.useState(true);
+
+      React.useEffect(() => {
+        fetchAllAdminData();
+      }, []);
+
+      const fetchAllAdminData = async () => {
+        setLoading(true);
+        const [usersRes, appsRes, logsRes] = await Promise.all([
+          supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+          supabase.from('tournament_applications').select('*').order('submitted_at', { ascending: false }),
+          supabase.from('audit_logs').select('*').order('created_at', { ascending: false })
+        ]);
+
+        if (usersRes.data) setUsers(usersRes.data);
+        if (appsRes.data) setApplications(appsRes.data);
+        if (logsRes.data) setLogs(logsRes.data);
+        setLoading(false);
+      };
+
+      const handleUpdateRole = async (userId, newRole) => {
+        const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+        if (error) {
+          showNotification(`Role update failed: ${error.message}`, 'error');
+        } else {
+          showNotification(`User role updated to ${newRole}!`, 'success');
+          await safeAuditLog(currentUser, 'UPDATE_USER_ROLE', { target_user_id: userId, new_role: newRole, timestamp: getFormattedDateTime() });
+          fetchAllAdminData();
+        }
+      };
+
+      const handleAdminApprove = async (appId, status) => {
+        const { error } = await supabase.from('tournament_applications').update({ status }).eq('id', appId);
+        if (error) {
+          showNotification(`Action failed: ${error.message}`, 'error');
+        } else {
+          showNotification(`Application set to ${status}!`, 'success');
+          await safeAuditLog(currentUser, 'ADMIN_APPROVE_REGISTRATION', { app_id: appId, status, timestamp: getFormattedDateTime() });
+          fetchAllAdminData();
+        }
+      };
+
+      const pendingCount = applications.filter(a => a.status === 'Pending').length;
+      const approvedCount = applications.filter(a => a.status === 'Approved').length;
+
+      return (
+        <div className="p-4 space-y-4 animate-pop-in">
+          <div className="grid grid-cols-4 p-1 bg-[#13093B]/80 rounded-2xl border border-[#FF7A00]/20 text-[9px] font-heading font-bold text-center">
+            <button onClick={() => setAdminTab('metrics')} className={`app-press py-1.5 rounded-xl ${adminTab === 'metrics' ? 'bg-[#FF7A00] text-slate-950 shadow-md' : 'text-slate-300'}`}>Metrics</button>
+            <button onClick={() => setAdminTab('users')} className={`app-press py-1.5 rounded-xl ${adminTab === 'users' ? 'bg-[#FF7A00] text-slate-950 shadow-md' : 'text-slate-300'}`}>Users</button>
+            <button onClick={() => setAdminTab('approvals')} className={`app-press py-1.5 rounded-xl ${adminTab === 'approvals' ? 'bg-[#FF7A00] text-slate-950 shadow-md' : 'text-slate-300'}`}>Rosters</button>
+            <button onClick={() => setAdminTab('logs')} className={`app-press py-1.5 rounded-xl ${adminTab === 'logs' ? 'bg-[#FF7A00] text-slate-950 shadow-md' : 'text-slate-300'}`}>Logs</button>
+          </div>
+
+          {loading ? (
+            <LoadingSpinner label="Fetching system data..." />
+          ) : (
+            <>
+              {adminTab === 'metrics' && (
+                <div className="space-y-3 animate-pop-in">
+                  <h3 className="text-xs font-bold font-heading text-white border-b border-[#FF7A00]/20 pb-2">
+                    📊 Ormoc Municipal System Overview
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-2xl text-center space-y-1 shadow-lg">
+                      <p className="text-[10px] text-slate-400 font-heading">Total Accounts</p>
+                      <p className="text-xl font-black font-mono text-[#FF7A00]">{users.length}</p>
+                    </div>
+
+                    <div className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-2xl text-center space-y-1 shadow-lg">
+                      <p className="text-[10px] text-slate-400 font-heading">Pending Rosters</p>
+                      <p className="text-xl font-black font-mono text-[#FFC700]">{pendingCount}</p>
+                    </div>
+
+                    <div className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-2xl text-center space-y-1 shadow-lg">
+                      <p className="text-[10px] text-slate-400 font-heading">Approved Rosters</p>
+                      <p className="text-xl font-black font-mono text-emerald-400">{approvedCount}</p>
+                    </div>
+
+                    <div className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-2xl text-center space-y-1 shadow-lg">
+                      <p className="text-[10px] text-slate-400 font-heading">Security Audit Logs</p>
+                      <p className="text-xl font-black font-mono text-cyan-400">{logs.length}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {adminTab === 'users' && (
+                <div className="space-y-3 animate-pop-in">
+                  <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
+                    <h3 className="text-xs font-bold font-heading text-white">👥 User Accounts Management</h3>
+                    <button onClick={fetchAllAdminData} className="app-press text-[10px] text-[#FF7A00] font-heading">Refresh</button>
+                  </div>
+
+                  <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                    {users.map((u) => (
+                      <div key={u.id} className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/20 rounded-2xl space-y-2 text-xs shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-bold font-heading text-white">{u.full_name}</p>
+                            <p className="text-[10px] text-slate-400 font-mono">@{u.username} • {u.email}</p>
+                          </div>
+                          <span className="px-2 py-0.5 bg-[#FF7A00]/20 text-[#FF7A00] font-bold text-[9px] rounded-full capitalize">
+                            {u.role}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                          <span className="text-[10px] text-slate-400">Change Role:</span>
+                          <select
+                            value={u.role}
+                            onChange={(e) => handleUpdateRole(u.id, e.target.value)}
+                            className="px-2 py-1 bg-[#0B032D] border border-[#FF7A00]/30 rounded-lg text-[10px] text-white outline-none"
+                          >
+                            <option value="athlete">Athlete</option>
+                            <option value="organizer">Organizer</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {adminTab === 'approvals' && (
+                <div className="space-y-3 animate-pop-in">
+                  <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
+                    <h3 className="text-xs font-bold font-heading text-white">⚡ Master Roster Approvals</h3>
+                    <button onClick={fetchAllAdminData} className="app-press text-[10px] text-[#FF7A00] font-heading">Refresh</button>
+                  </div>
+
+                  <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                    {applications.map((app) => (
+                      <div key={app.id} className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/20 rounded-2xl space-y-2 text-xs shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-bold font-heading text-white">{app.athlete_name}</p>
+                            <p className="text-[10px] text-slate-400">{app.tournament_category} • {app.barangay}</p>
+                          </div>
+                          <StatusBadge status={app.status} />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <button onClick={() => handleAdminApprove(app.id, 'Approved')} className="app-press py-1 bg-[#FF7A00] text-slate-950 font-bold font-heading rounded-xl text-[10px]">Approve</button>
+                          <button onClick={() => handleAdminApprove(app.id, 'Declined')} className="app-press py-1 bg-red-600/20 text-red-300 border border-red-500/30 font-bold font-heading rounded-xl text-[10px]">Decline</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {adminTab === 'logs' && (
+                <div className="space-y-3 animate-pop-in">
+                  <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
+                    <h3 className="text-xs font-bold font-heading text-white">🛡️ Municipal Audit Log Trail</h3>
+                    <button onClick={fetchAllAdminData} className="app-press text-[10px] text-[#FF7A00] font-heading">Refresh</button>
+                  </div>
+
+                  <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                    {logs.map((log) => (
+                      <div key={log.id} className="p-2.5 bg-[#13093B]/80 border border-[#FF7A00]/20 rounded-xl space-y-1 font-mono text-[10px]">
+                        <div className="flex justify-between text-slate-300">
+                          <span>{new Date(log.created_at).toLocaleString()}</span>
+                          <span className="text-[#FF7A00] font-bold">{log.action}</span>
+                        </div>
+                        <p className="text-white font-sans text-xs">{log.user_email || 'System User'}</p>
+                        <p className="text-slate-400 text-[9px] truncate">{JSON.stringify(log.details)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 8. MAIN APP SHELL & BOTTOM NAV
+    // =========================================================================
+    function App() {
+      const [currentUser, setCurrentUser] = React.useState(null);
+      const [activeNavTab, setActiveNavTab] = React.useState('main');
+      const [notification, setNotification] = React.useState({ message: '', type: 'info' });
+      const [showLogoutModal, setShowLogoutModal] = React.useState(false);
+
+      const showNotification = (message, type = 'info') => setNotification({ message, type });
+      const clearNotification = () => setNotification({ message: '', type: 'info' });
+
+      const handleConfirmLogout = async () => {
+        if (currentUser) {
+          await safeAuditLog(currentUser, 'USER_LOGOUT', { username: currentUser.username, timestamp: getFormattedDateTime() });
+        }
+        setCurrentUser(null);
+        setShowLogoutModal(false);
+        showNotification('Signed out of LigaDakbayan.', 'info');
+      };
+
+      return (
+        <div className="flex flex-col h-full w-full justify-between overflow-hidden bg-[#0B032D]">
+          <ConfirmModal isOpen={showLogoutModal} title="Confirm Logout" message="Are you sure you want to log out of LigaDakbayan?" confirmText="Logout" confirmStyle="danger" onConfirm={handleConfirmLogout} onCancel={() => setShowLogoutModal(false)} />
+
+          {!currentUser ? (
+            <div className="flex-1 flex flex-col justify-between overflow-y-auto">
+              <SystemBanner notification={notification} onClose={clearNotification} />
+              <AuthModule onAuthSuccess={setCurrentUser} showNotification={showNotification} />
+              <footer className="py-3 text-center text-[10px] text-slate-400 font-mono">LigaDakbayan Ormoc &copy; 2026</footer>
+            </div>
+          ) : (
+            <div className="flex flex-col h-full justify-between">
+              {/* TOP HEADER */}
+              <header className="px-4 py-3 bg-[#13093B]/90 backdrop-blur-md border-b border-[#FF7A00]/30 flex items-center justify-between z-20">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-2xl bg-[#FF7A00]/20 border border-[#FF7A00]/40 text-[#FF7A00] flex items-center justify-center font-black font-heading text-xs shadow-inner">
+                    {currentUser.full_name ? currentUser.full_name.charAt(0) : 'L'}
+                  </div>
+                  <div>
+                    <h2 className="text-xs font-bold font-heading text-white leading-none">{currentUser.full_name}</h2>
+                    <p className="text-[10px] text-slate-300 capitalize mt-0.5">Role: <span className="text-[#FF7A00] font-bold font-heading">{currentUser.role}</span></p>
+                  </div>
+                </div>
+
+                <button type="button" onClick={() => setShowLogoutModal(true)} className="app-press px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 rounded-xl text-[10px] font-bold font-heading">
+                  Logout
+                </button>
+              </header>
+
+              <SystemBanner notification={notification} onClose={clearNotification} />
+
+              {/* MAIN CONTENT AREA */}
+              <main className="flex-1 overflow-y-auto">
+                {activeNavTab === 'zone' ? (
+                  <OrmocZoneSchedule />
+                ) : currentUser.role === 'admin' ? (
+                  <AdminDashboard currentUser={currentUser} showNotification={showNotification} />
+                ) : currentUser.role === 'organizer' ? (
+                  <OrganizerDashboard currentUser={currentUser} showNotification={showNotification} />
+                ) : (
+                  <PlayerDashboard currentUser={currentUser} showNotification={showNotification} />
+                )}
+              </main>
+
+              {/* BOTTOM APP NAVIGATION */}
+              <nav className="px-6 py-2.5 bg-[#13093B]/90 backdrop-blur-md border-t border-[#FF7A00]/30 flex items-center justify-around text-[10px] z-20">
+                <button onClick={() => setActiveNavTab('main')} className={`app-press flex flex-col items-center gap-0.5 ${activeNavTab === 'main' ? 'text-[#FF7A00] font-bold font-heading' : 'text-slate-400 hover:text-slate-200'}`}>
+                  <span className="text-base">🏀</span>
+                  <span>Dashboard</span>
+                </button>
+                <button onClick={() => setActiveNavTab('zone')} className={`app-press flex flex-col items-center gap-0.5 ${activeNavTab === 'zone' ? 'text-[#FF7A00] font-bold font-heading' : 'text-slate-400 hover:text-slate-200'}`}>
+                  <span className="text-base">🏆</span>
+                  <span>Live Brackets</span>
+                </button>
+              </nav>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
