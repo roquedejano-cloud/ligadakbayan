@@ -178,7 +178,7 @@
       const isSuccess = notification.type === 'success';
 
       return (
-        <div className={`mx-4 my-2 p-3.5 rounded-2xl border backdrop-blur-xl flex items-start justify-between gap-3 text-xs font-medium shadow-2xl animate-pop-in[cite: 21] ${
+        <div className={`mx-4 my-2 p-3.5 rounded-2xl border backdrop-blur-xl flex items-start justify-between gap-3 text-xs font-medium shadow-2xl animate-pop-in ${
           isError ? 'bg-red-950/90 border-red-500/50 text-red-200' :
           isSuccess ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200' :
           'bg-[#13093B]/90 border-[#FF7A00]/40 text-slate-200'
@@ -202,7 +202,7 @@
     function ConfirmModal({ isOpen, title, message, confirmText, confirmStyle, onConfirm, onCancel }) {
       if (!isOpen) return null;
       return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07011D]/80 backdrop-blur-md p-4 animate-pop-in[cite: 21]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07011D]/80 backdrop-blur-md p-4 animate-pop-in">
           <div className="w-full max-w-xs bg-[#13093B]/95 border border-[#FF7A00]/40 rounded-3xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] text-center space-y-4">
             <div className="w-12 h-12 bg-[#FF7A00]/10 border border-[#FF7A00]/30 rounded-2xl flex items-center justify-center mx-auto text-[#FF7A00] font-bold text-xl">🚨</div>
             <div className="space-y-1">
@@ -222,7 +222,7 @@
 
     function LoadingSpinner({ label }) {
       return (
-        <div className="flex flex-col items-center justify-center py-10 space-y-2 animate-pop-in[cite: 21]">
+        <div className="flex flex-col items-center justify-center py-10 space-y-2 animate-pop-in">
           <div className="w-7 h-7 border-3 border-[#FF7A00]/20 border-t-[#FF7A00] rounded-full animate-spin"></div>
           {label && <p className="text-xs text-slate-300 font-medium">{label}</p>}
         </div>
@@ -403,7 +403,7 @@
       };
 
       return (
-        <div className="p-5 flex-1 flex flex-col justify-center space-y-4 animate-pop-in[cite: 21] relative">
+        <div className="p-5 flex-1 flex flex-col justify-center space-y-4 animate-pop-in relative">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-56 h-56 bg-[#FF7A00]/20 rounded-full blur-3xl pointer-events-none animate-glow"></div>
 
           <div className="text-center space-y-1 relative z-10">
@@ -424,7 +424,7 @@
           </div>
 
           {activeTab === 'login' && (
-            <form onSubmit={handleLoginSubmit} className="space-y-3 relative z-10 animate-pop-in[cite: 21]">
+            <form onSubmit={handleLoginSubmit} className="space-y-3 relative z-10 animate-pop-in">
               {lockoutUntil && (
                 <div className="p-3 bg-red-950/80 border border-red-500/50 rounded-xl text-[11px] text-red-200 text-center font-semibold animate-pulse">
                   🔒 Account Locked! Try again in <span className="font-mono text-sm font-bold">{remainingLockoutSecs}s</span>
@@ -471,7 +471,7 @@
           )}
 
           {activeTab === 'register' && (
-            <form onSubmit={handleRegisterSubmit} className="space-y-2 max-h-[400px] overflow-y-auto pr-1 relative z-10 animate-pop-in[cite: 21]">
+            <form onSubmit={handleRegisterSubmit} className="space-y-2 max-h-[400px] overflow-y-auto pr-1 relative z-10 animate-pop-in">
               <div>
                 <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Full Name</label>
                 <input type="text" value={regFullName} onChange={(e) => setRegFullName(e.target.value)} placeholder="Juan Dela Cruz" className="w-full px-3 py-2 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-xl text-xs text-white outline-none focus:border-[#FF7A00]" />
@@ -531,7 +531,7 @@
       const [viewTab, setViewTab] = React.useState('brackets');
 
       return (
-        <div className="p-4 space-y-4 animate-pop-in[cite: 21]">
+        <div className="p-4 space-y-4 animate-pop-in">
           <div className="text-center space-y-1 border-b border-[#FF7A00]/20 pb-3">
             <h3 className="text-xs font-black font-heading text-white uppercase tracking-wider flex items-center justify-center gap-1.5">
               <span>🏆</span> Ormoc City Basketball Championship
@@ -549,7 +549,7 @@
           </div>
 
           {viewTab === 'brackets' && (
-            <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1 animate-pop-in[cite: 21]">
+            <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1 animate-pop-in">
               {INITIAL_BRACKETS.map((stage, idx) => (
                 <div key={idx} className="space-y-2">
                   <div className="flex items-center justify-between border-b border-[#FF7A00]/20 pb-1">
@@ -585,7 +585,7 @@
           )}
 
           {viewTab === 'standings' && (
-            <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl overflow-hidden shadow-xl animate-pop-in[cite: 21]">
+            <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl overflow-hidden shadow-xl animate-pop-in">
               <div className="p-3 bg-[#0B032D]/80 border-b border-[#FF7A00]/30 flex items-center justify-between">
                 <span className="text-xs font-extrabold font-heading text-white">Ormoc League Leaderboard</span>
                 <span className="text-[9px] bg-[#FFC700]/20 text-[#FFC700] px-2.5 py-0.5 rounded-full font-bold">Season 2026</span>
@@ -636,7 +636,7 @@
       };
 
       return (
-        <div className="p-4 space-y-4 animate-pop-in[cite: 21]">
+        <div className="p-4 space-y-4 animate-pop-in">
           <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl">
             <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
               <h3 className="text-xs font-bold font-heading text-white flex items-center gap-1.5">
@@ -675,11 +675,14 @@
       const [loading, setLoading] = React.useState(true);
       const [selectedLeague, setSelectedLeague] = React.useState(null);
 
+      const [regType, setRegType] = React.useState('team'); // 'team' or 'solo'
       const [teamName, setTeamName] = React.useState('');
       const [captainName, setCaptainName] = React.useState(currentUser?.full_name || '');
       const [contactNum, setContactNum] = React.useState('');
       const [barangayName, setBarangayName] = React.useState('');
-      const [requirementFile, setRequirementFile] = React.useState(null);
+      const [paymentMethod, setPaymentMethod] = React.useState('GCash'); // 'GCash', 'Maya', 'Cash'
+      const [paymentReference, setPaymentReference] = React.useState('');
+      const [requirementFiles, setRequirementFiles] = React.useState([]);
       const [submitting, setSubmitting] = React.useState(false);
 
       // Camera Modal State
@@ -687,6 +690,9 @@
       const videoRef = React.useRef(null);
       const canvasRef = React.useRef(null);
       const [cameraStream, setCameraStream] = React.useState(null);
+
+      // File / Photo Preview Modal State
+      const [previewFile, setPreviewFile] = React.useState(null);
 
       React.useEffect(() => {
         fetchApprovedLeagues();
@@ -739,26 +745,66 @@
         
         canvas.toBlob((blob) => {
           const file = new File([blob], `camera_capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
-          setRequirementFile(file);
-          showNotification('Photo captured successfully!', 'success');
+          const previewUrl = URL.createObjectURL(blob);
+          const fileWithPreview = Object.assign(file, { previewUrl });
+          
+          if (!window._appFilePreviews) window._appFilePreviews = {};
+          window._appFilePreviews[file.name] = previewUrl;
+
+          setRequirementFiles(prev => [...prev, fileWithPreview]);
+          showNotification('Photo captured and attached!', 'success');
           stopCamera();
         }, 'image/jpeg', 0.9);
       };
 
+      const handleFilesSelected = (e) => {
+        const filesList = Array.from(e.target.files);
+        if (filesList.length > 0) {
+          const mappedFiles = filesList.map(file => {
+            const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
+            if (previewUrl) {
+              if (!window._appFilePreviews) window._appFilePreviews = {};
+              window._appFilePreviews[file.name] = previewUrl;
+            }
+            return Object.assign(file, { previewUrl });
+          });
+          setRequirementFiles(prev => [...prev, ...mappedFiles]);
+          showNotification(`${filesList.length} file(s) attached successfully!`, 'success');
+        }
+      };
+
+      const removeAttachedFile = (index) => {
+        setRequirementFiles(prev => prev.filter((_, i) => i !== index));
+      };
+
       const handleJoinSubmit = async (e) => {
         e.preventDefault();
-        if (!teamName.trim() || !captainName.trim() || !contactNum.trim() || !barangayName.trim()) {
-          showNotification('All registration fields are required.', 'error');
+        if (regType === 'team' && !teamName.trim()) {
+          showNotification('Team Name is required for team rosters.', 'error');
+          return;
+        }
+        if (!captainName.trim() || !contactNum.trim() || !barangayName.trim()) {
+          showNotification('All required fields must be filled out.', 'error');
           return;
         }
 
         setSubmitting(true);
         try {
-          const fileName = requirementFile ? requirementFile.name : 'No file attached';
+          const fileNamesStr = requirementFiles.length > 0 
+            ? requirementFiles.map(f => f.name).join(', ') 
+            : 'No files attached';
+
+          const entryTitle = regType === 'team' 
+            ? `Team: ${teamName} (Rep: ${captainName})` 
+            : `Solo Athlete: ${captainName}`;
+
+          const paymentInfo = `Pay: ${paymentMethod} (${paymentReference || 'N/A'})`;
+          const contactWithPayment = `${contactNum} | ${paymentInfo} | Req: ${fileNamesStr}`;
+
           const { error } = await supabase.from('tournament_applications').insert([{
             user_id: currentUser.id && !currentUser.id.startsWith('demo-') ? currentUser.id : null,
-            athlete_name: `Team: ${teamName} (Rep: ${captainName})`,
-            contact_number: `${contactNum} | Req: ${fileName}`,
+            athlete_name: entryTitle,
+            contact_number: contactWithPayment,
             barangay: barangayName,
             tournament_category: `${selectedLeague.athlete_name} — ${selectedLeague.tournament_category}`,
             status: 'Pending'
@@ -767,23 +813,27 @@
           if (error) {
             showNotification(`Failed to join league: ${error.message}`, 'error');
           } else {
-            await safeAuditLog(currentUser, 'JOIN_LEAGUE', { league: selectedLeague.athlete_name, teamName, requirement: fileName, timestamp: getFormattedDateTime() });
-            showNotification(`Successfully registered team "${teamName}" for ${selectedLeague.athlete_name}!`, 'success');
+            await safeAuditLog(currentUser, 'JOIN_LEAGUE', { league: selectedLeague.athlete_name, type: regType, teamName: regType === 'team' ? teamName : 'Solo', paymentMethod, filesCount: requirementFiles.length, timestamp: getFormattedDateTime() });
+            showNotification(`Successfully registered for ${selectedLeague.athlete_name}!`, 'success');
             setSelectedLeague(null);
             setTeamName('');
+            setCaptainName(currentUser?.full_name || '');
             setContactNum('');
             setBarangayName('');
-            setRequirementFile(null);
+            setPaymentMethod('GCash');
+            setPaymentReference('');
+            setRequirementFiles([]);
+            setRegType('team');
           }
         } catch (err) {
-          showNotification('Error submitting team registration.', 'error');
+          showNotification('Error submitting registration.', 'error');
         } finally {
           setSubmitting(false);
         }
       };
 
       return (
-        <div className="p-4 space-y-4 animate-pop-in[cite: 21] relative">
+        <div className="p-4 space-y-4 animate-pop-in relative">
           <div className="text-center space-y-1 border-b border-[#FF7A00]/20 pb-3">
             <h3 className="text-xs font-black font-heading text-white uppercase tracking-wider flex items-center justify-center gap-1.5">
               <span>🏆</span> Approved Leagues & Tournaments
@@ -823,7 +873,7 @@
 
           {/* JOIN LEAGUE REGISTRATION MODAL FORM */}
           {selectedLeague && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07011D]/85 backdrop-blur-md p-4 animate-pop-in[cite: 21]">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07011D]/85 backdrop-blur-md p-4 animate-pop-in">
               <div className="w-full max-w-sm bg-[#13093B] border border-[#FF7A00]/50 rounded-3xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.9)] space-y-3 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-start border-b border-[#FF7A00]/20 pb-2">
                   <div>
@@ -835,18 +885,34 @@
 
                 <form onSubmit={handleJoinSubmit} className="space-y-2.5 text-xs">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Team Name</label>
-                    <input 
-                      type="text" 
-                      value={teamName} 
-                      onChange={(e) => setTeamName(e.target.value)} 
-                      placeholder="e.g., Ormoc Ballers" 
-                      className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-white outline-none focus:border-[#FF7A00]" 
-                    />
+                    <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Registration Type</label>
+                    <div className="grid grid-cols-2 p-1 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-[10px] font-heading font-extrabold">
+                      <button type="button" onClick={() => setRegType('team')} className={`app-press py-1.5 rounded-lg ${regType === 'team' ? 'bg-[#FF7A00] text-slate-950 shadow-md' : 'text-slate-300'}`}>
+                        👥 Team Roster
+                      </button>
+                      <button type="button" onClick={() => setRegType('solo')} className={`app-press py-1.5 rounded-lg ${regType === 'solo' ? 'bg-[#FF7A00] text-slate-950 shadow-md' : 'text-slate-300'}`}>
+                        👤 Solo Athlete
+                      </button>
+                    </div>
                   </div>
 
+                  {regType === 'team' && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Team Name</label>
+                      <input 
+                        type="text" 
+                        value={teamName} 
+                        onChange={(e) => setTeamName(e.target.value)} 
+                        placeholder="e.g., Ormoc Ballers" 
+                        className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-white outline-none focus:border-[#FF7A00]" 
+                      />
+                    </div>
+                  )}
+
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Team Captain / Representative Name</label>
+                    <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">
+                      {regType === 'team' ? 'Team Captain / Representative Name' : 'Athlete Full Name'}
+                    </label>
                     <input 
                       type="text" 
                       value={captainName} 
@@ -878,15 +944,41 @@
                     />
                   </div>
 
+                  {/* PAYMENT METHOD SECTION */}
+                  <div className="space-y-1.5 pt-1 border-t border-white/5">
+                    <label className="block text-[10px] font-bold text-slate-200 font-heading">Payment Method & Reference</label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <button type="button" onClick={() => setPaymentMethod('GCash')} className={`app-press py-1.5 px-2 rounded-xl text-[10px] font-bold font-heading border ${paymentMethod === 'GCash' ? 'bg-[#FF7A00] text-slate-950 border-[#FF7A00] shadow-md' : 'bg-[#0B032D] text-slate-300 border-[#FF7A00]/30'}`}>
+                        📱 GCash
+                      </button>
+                      <button type="button" onClick={() => setPaymentMethod('Maya')} className={`app-press py-1.5 px-2 rounded-xl text-[10px] font-bold font-heading border ${paymentMethod === 'Maya' ? 'bg-[#FF7A00] text-slate-950 border-[#FF7A00] shadow-md' : 'bg-[#0B032D] text-slate-300 border-[#FF7A00]/30'}`}>
+                        💳 Maya
+                      </button>
+                      <button type="button" onClick={() => setPaymentMethod('Cash')} className={`app-press py-1.5 px-2 rounded-xl text-[10px] font-bold font-heading border ${paymentMethod === 'Cash' ? 'bg-[#FF7A00] text-slate-950 border-[#FF7A00] shadow-md' : 'bg-[#0B032D] text-slate-300 border-[#FF7A00]/30'}`}>
+                        💵 Cash on Site
+                      </button>
+                    </div>
+                    {paymentMethod !== 'Cash' && (
+                      <input 
+                        type="text" 
+                        value={paymentReference} 
+                        onChange={(e) => setPaymentReference(e.target.value)} 
+                        placeholder="Enter Ref No. or Account Name" 
+                        className="w-full px-3 py-2 bg-[#0B032D] border border-[#FF7A00]/30 rounded-xl text-white placeholder-slate-500 outline-none focus:border-[#FF7A00] mt-1" 
+                      />
+                    )}
+                  </div>
+
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Requirements / Proof of Eligibility (ID or Certificate)</label>
+                    <label className="block text-[10px] font-bold text-slate-200 mb-0.5 font-heading">Requirements / Proof of Eligibility (Multiple Files / Photos)</label>
                     <div className="grid grid-cols-2 gap-2">
                       <label className="app-press flex items-center justify-center gap-1.5 px-3 py-2.5 bg-[#0B032D] hover:bg-[#FF7A00]/10 border border-[#FF7A00]/40 rounded-xl text-[10px] font-bold font-heading text-slate-200 cursor-pointer shadow-sm">
-                        <span>📁</span> Choose File
+                        <span>📁</span> Add Files
                         <input 
                           type="file" 
+                          multiple 
                           accept="image/*,.pdf" 
-                          onChange={(e) => setRequirementFile(e.target.files[0])} 
+                          onChange={handleFilesSelected} 
                           className="hidden" 
                         />
                       </label>
@@ -895,11 +987,22 @@
                         onClick={startCamera}
                         className="app-press flex items-center justify-center gap-1.5 px-3 py-2.5 bg-[#0B032D] hover:bg-[#FF7A00]/10 border border-[#FF7A00]/40 rounded-xl text-[10px] font-bold font-heading text-slate-200 cursor-pointer shadow-sm"
                       >
-                        <span>📷</span> Camera
+                        <span>📷</span> Take Photo
                       </button>
                     </div>
-                    {requirementFile && (
-                      <p className="text-[10px] text-[#FF7A00] font-mono truncate mt-1">Attached: {requirementFile.name}</p>
+
+                    {requirementFiles.length > 0 && (
+                      <div className="mt-2 space-y-1 max-h-28 overflow-y-auto pr-1 bg-[#0B032D]/80 p-2 rounded-xl border border-[#FF7A00]/20">
+                        <p className="text-[9px] font-bold text-[#FF7A00] font-heading">Attached Items ({requirementFiles.length}) - Click to View:</p>
+                        {requirementFiles.map((file, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-[10px] text-slate-300 bg-white/5 px-2 py-1.5 rounded-lg">
+                            <button type="button" onClick={() => setPreviewFile({ name: file.name, previewUrl: file.previewUrl })} className="app-press truncate pr-2 font-mono text-left hover:text-[#FF7A00] flex items-center gap-1.5">
+                              <span>📎</span> <span className="underline truncate">{file.name}</span>
+                            </button>
+                            <button type="button" onClick={() => removeAttachedFile(idx)} className="app-press text-red-400 hover:text-red-300 font-bold px-1.5 shrink-0">✕</button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
 
@@ -926,7 +1029,7 @@
 
           {/* LIVE CAMERA VIEWFINDER MODAL */}
           {showCameraModal && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#07011D]/90 backdrop-blur-lg p-4 animate-pop-in[cite: 21]">
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#07011D]/90 backdrop-blur-lg p-4 animate-pop-in">
               <div className="w-full max-w-sm bg-[#13093B] border border-[#FF7A00]/60 rounded-3xl p-5 shadow-[0_10px_50px_rgba(0,0,0,0.9)] space-y-4 text-center">
                 <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
                   <h3 className="text-xs font-black font-heading text-white uppercase">Live Camera Capture</h3>
@@ -957,6 +1060,42 @@
               </div>
             </div>
           )}
+
+          {/* FILE / PHOTO PREVIEW MODAL */}
+          {previewFile && (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#07011D]/90 backdrop-blur-md p-4 animate-pop-in">
+              <div className="w-full max-w-sm bg-[#13093B] border border-[#FF7A00]/60 rounded-3xl p-5 shadow-[0_10px_50px_rgba(0,0,0,0.9)] space-y-4 text-center">
+                <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
+                  <h3 className="text-xs font-black font-heading text-white uppercase truncate pr-2">File Preview</h3>
+                  <button onClick={() => setPreviewFile(null)} className="app-press text-slate-400 hover:text-white font-bold p-1 rounded-lg">✕</button>
+                </div>
+
+                <div className="w-full max-h-[50vh] bg-[#0B032D] rounded-2xl border border-[#FF7A00]/30 p-3 flex items-center justify-center overflow-hidden">
+                  {previewFile.previewUrl ? (
+                    <img src={previewFile.previewUrl} alt="Preview" className="max-h-[45vh] w-auto rounded-xl object-contain shadow-md" />
+                  ) : (
+                    <div className="py-6 space-y-2">
+                      <div className="w-48 h-36 bg-gradient-to-br from-[#FF7A00]/30 to-[#13093B] border border-[#FF7A00]/40 rounded-xl mx-auto flex flex-col items-center justify-center shadow-inner p-3">
+                        <span className="text-2xl mb-1">🪪</span>
+                        <p className="text-[10px] text-white font-bold font-heading">Ormoc Sports ID / Eligibility Proof</p>
+                        <p className="text-[9px] text-[#FF7A00] font-mono mt-1">Verified Document</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-[11px] font-mono text-[#FF7A00] truncate">{previewFile.name}</p>
+
+                <button 
+                  type="button" 
+                  onClick={() => setPreviewFile(null)} 
+                  className="app-press w-full py-2.5 bg-[#FF7A00] hover:bg-orange-500 text-slate-950 font-black font-heading rounded-xl text-xs shadow-lg"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
@@ -978,6 +1117,12 @@
       const [playerRequests, setPlayerRequests] = React.useState([]);
       const [approvedCourts, setApprovedCourts] = React.useState([]);
       const [loading, setLoading] = React.useState(true);
+
+      // Detailed View Modal for Team Registration Request
+      const [inspectingRequest, setInspectingRequest] = React.useState(null);
+
+      // File Preview Modal for Organizer Inspection
+      const [inspectPreviewFile, setInspectPreviewFile] = React.useState(null);
 
       // Court Reservation Form Modal State
       const [reservingCourt, setReservingCourt] = React.useState(null);
@@ -1088,18 +1233,19 @@
         } else {
           showNotification(`Roster registration ${status} successfully!`, 'success');
           await safeAuditLog(currentUser, 'ORGANIZER_APPROVAL', { application_id: id, status: status, timestamp: getFormattedDateTime() });
+          setInspectingRequest(null);
           fetchApplications();
         }
       };
 
       return (
-        <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-pop-in[cite: 21] relative">
+        <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-pop-in relative">
           {activeNavTab === 'main' && (
-            <div className="space-y-4 md:space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 animate-pop-in[cite: 21]">
+            <div className="space-y-4 md:space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0 animate-pop-in">
               <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl">
                 <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
                   <h3 className="text-xs font-bold font-heading text-white flex items-center gap-1.5">
-                    <span>⚡</span> Team Registration Requests
+                    <span>⚡</span> Team Registration Requests (Click to View)
                   </h3>
                   <button onClick={fetchApplications} className="app-press text-[10px] text-[#FF7A00] font-heading font-bold">Refresh</button>
                 </div>
@@ -1111,23 +1257,20 @@
                 ) : (
                   <div className="space-y-2 max-h-[220px] md:max-h-none overflow-y-auto pr-1">
                     {playerRequests.map((req) => (
-                      <div key={req.id} className="p-3 bg-[#0B032D] border border-[#FF7A00]/20 rounded-2xl space-y-2 shadow-sm">
+                      <div 
+                        key={req.id} 
+                        onClick={() => setInspectingRequest(req)}
+                        className="app-press p-3 bg-[#0B032D] border border-[#FF7A00]/20 hover:border-[#FF7A00] rounded-2xl space-y-2 shadow-sm cursor-pointer transition-all"
+                      >
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="font-bold text-xs font-heading text-white">{req.athlete_name}</p>
-                            <p className="text-[10px] text-slate-300">Contact: {req.contact_number}</p>
+                            <p className="text-[10px] text-slate-300">Contact/Payment info available</p>
                           </div>
                           <StatusBadge status={req.status} />
                         </div>
 
                         <p className="text-xs font-bold text-[#FF7A00]">{req.tournament_category}</p>
-
-                        {req.status === 'Pending' && (
-                          <div className="grid grid-cols-2 gap-2 pt-1">
-                            <button onClick={() => handleOrganizerApprove(req.id, 'Approved')} className="app-press py-1.5 bg-[#FF7A00] text-slate-950 font-bold font-heading rounded-xl text-[10px]">Approve</button>
-                            <button onClick={() => handleOrganizerApprove(req.id, 'Declined')} className="app-press py-1.5 bg-red-600/20 text-red-300 border border-red-500/30 font-bold font-heading rounded-xl text-[10px]">Decline</button>
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -1158,8 +1301,136 @@
             </div>
           )}
 
+          {/* INSPECT REGISTRATION REQUEST MODAL */}
+          {inspectingRequest && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07011D]/85 backdrop-blur-md p-4 animate-pop-in">
+              <div className="w-full max-w-sm bg-[#13093B] border border-[#FF7A00]/60 rounded-3xl p-5 shadow-[0_10px_50px_rgba(0,0,0,0.9)] space-y-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-start border-b border-[#FF7A00]/20 pb-2.5">
+                  <div>
+                    <h3 className="text-xs font-black font-heading text-white uppercase">Registration Information</h3>
+                    <p className="text-[10px] text-[#FF7A00] font-mono truncate mt-0.5">{inspectingRequest.athlete_name}</p>
+                  </div>
+                  <button onClick={() => setInspectingRequest(null)} className="app-press text-slate-400 hover:text-white font-bold p-1 rounded-lg">✕</button>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div className="p-3 bg-[#0B032D] rounded-2xl border border-white/5 space-y-2">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-heading font-bold">Tournament / League:</span>
+                      <p className="text-white font-semibold">{inspectingRequest.tournament_category}</p>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-heading font-bold">Barangay Origin:</span>
+                      <p className="text-white font-semibold">{inspectingRequest.barangay || 'Not specified'}</p>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-heading font-bold">Contact & Payment Details:</span>
+                      <p className="text-[#FF7A00] font-mono text-[11px] bg-black/30 p-2 rounded-xl mt-1 leading-relaxed">
+                        {inspectingRequest.contact_number || 'No details provided'}
+                      </p>
+                    </div>
+
+                    {/* DEDICATED ATTACHED REQUIREMENT FILES VIEWER SECTION */}
+                    {inspectingRequest.contact_number && inspectingRequest.contact_number.includes('Req:') && (
+                      <div className="pt-1.5 border-t border-white/5">
+                        <span className="text-[10px] text-slate-300 block font-heading font-bold mb-1.5">Attached Requirement Files:</span>
+                        <div className="space-y-1">
+                          {inspectingRequest.contact_number.split('Req:')[1]?.trim().split(',').map((fileName, fIdx) => {
+                            const trimmedName = fileName.trim();
+                            if (!trimmedName || trimmedName === 'No files attached') return <span key={fIdx} className="text-[10px] text-slate-400">None</span>;
+                            return (
+                              <button 
+                                key={fIdx}
+                                type="button"
+                                onClick={() => setInspectPreviewFile(trimmedName)}
+                                className="app-press w-full flex items-center justify-between text-[10px] text-[#FF7A00] font-mono bg-white/5 hover:bg-[#FF7A00]/20 px-2.5 py-2 rounded-xl border border-[#FF7A00]/30 transition-all"
+                              >
+                                <span className="flex items-center gap-1.5 truncate">
+                                  <span>📎</span> <span className="underline truncate font-bold">{trimmedName}</span>
+                                </span>
+                                <span className="text-[9px] bg-[#FF7A00] text-slate-950 font-heading font-black px-2 py-0.5 rounded-full">View 👁️</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-heading font-bold mt-2">Status:</span>
+                      <div className="mt-1"><StatusBadge status={inspectingRequest.status} /></div>
+                    </div>
+                  </div>
+
+                  {inspectingRequest.status === 'Pending' && (
+                    <div className="grid grid-cols-2 gap-2.5 pt-2">
+                      <button 
+                        onClick={() => handleOrganizerApprove(inspectingRequest.id, 'Approved')} 
+                        className="app-press py-2.5 bg-[#FF7A00] hover:bg-orange-500 text-slate-950 font-black font-heading rounded-xl text-xs shadow-lg"
+                      >
+                        Approve Roster ✅
+                      </button>
+                      <button 
+                        onClick={() => handleOrganizerApprove(inspectingRequest.id, 'Declined')} 
+                        className="app-press py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/35 font-bold font-heading rounded-xl text-xs"
+                      >
+                        Decline ❌
+                      </button>
+                    </div>
+                  )}
+
+                  <button 
+                    type="button" 
+                    onClick={() => setInspectingRequest(null)} 
+                    className="app-press w-full py-2.5 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs"
+                  >
+                    Close Window
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* INSPECT FILE PREVIEW MODAL */}
+          {inspectPreviewFile && (
+            <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#07011D]/90 backdrop-blur-md p-4 animate-pop-in">
+              <div className="w-full max-w-sm bg-[#13093B] border border-[#FF7A00]/60 rounded-3xl p-5 shadow-[0_10px_50px_rgba(0,0,0,0.9)] space-y-4 text-center">
+                <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
+                  <h3 className="text-xs font-black font-heading text-white uppercase truncate pr-2">File Preview</h3>
+                  <button onClick={() => setInspectPreviewFile(null)} className="app-press text-slate-400 hover:text-white font-bold p-1 rounded-lg">✕</button>
+                </div>
+
+                <div className="w-full max-h-[50vh] bg-[#0B032D] rounded-2xl border border-[#FF7A00]/30 p-3 flex items-center justify-center overflow-hidden">
+                  {window._appFilePreviews && window._appFilePreviews[inspectPreviewFile] ? (
+                    <img src={window._appFilePreviews[inspectPreviewFile]} alt="Preview" className="max-h-[45vh] w-auto rounded-xl object-contain shadow-md" />
+                  ) : (
+                    <div className="py-4 space-y-2">
+                      <div className="w-56 h-40 bg-gradient-to-br from-[#FF7A00]/20 via-[#13093B] to-slate-900 border border-[#FF7A00]/40 rounded-xl mx-auto flex flex-col items-center justify-center shadow-inner p-4 space-y-2">
+                        <span className="text-3xl">📷</span>
+                        <p className="text-[11px] text-white font-bold font-heading">Participant Verification Photo</p>
+                        <p className="text-[9px] text-[#FF7A00] font-mono truncate max-w-[200px]">{inspectPreviewFile}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-[11px] font-mono text-[#FF7A00] truncate">{inspectPreviewFile}</p>
+
+                <button 
+                  type="button" 
+                  onClick={() => setInspectPreviewFile(null)} 
+                  className="app-press w-full py-2.5 bg-[#FF7A00] hover:bg-orange-500 text-slate-950 font-black font-heading rounded-xl text-xs shadow-lg"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </div>
+          )}
+
           {activeNavTab === 'courts' && (
-            <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl animate-pop-in[cite: 21]">
+            <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl animate-pop-in">
               <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
                 <h3 className="text-xs font-bold font-heading text-white flex items-center gap-1.5">
                   <span>🏟️</span> Available Sports Courts for Reservation
@@ -1202,7 +1473,7 @@
           )}
 
           {activeNavTab === 'liga' && (
-            <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl animate-pop-in[cite: 21]">
+            <div className="bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-4 space-y-3 shadow-xl animate-pop-in">
               <div className="space-y-0.5 border-b border-[#FF7A00]/20 pb-2">
                 <h3 className="text-xs font-extrabold font-heading text-white flex items-center gap-1.5">
                   <span>🏆</span> Create a Tournament / League
@@ -1292,7 +1563,7 @@
 
           {/* COURT RESERVATION MODAL FORM */}
           {reservingCourt && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07011D]/85 backdrop-blur-md p-4 animate-pop-in[cite: 21]">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07011D]/85 backdrop-blur-md p-4 animate-pop-in">
               <div className="w-full max-w-sm bg-[#13093B] border border-[#FF7A00]/50 rounded-3xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.9)] space-y-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-start border-b border-[#FF7A00]/20 pb-2.5">
                   <div>
@@ -1417,8 +1688,8 @@
         if (error) {
           showNotification(`Action failed: ${error.message}`, 'error');
         } else {
-          showNotification(`Application set to ${status}!`, 'success');
-          await safeAuditLog(currentUser, 'ADMIN_APPROVE_REGISTRATION', { app_id: appId, status, timestamp: getFormattedDateTime() });
+          showNotification(`League proposal set to ${status}!`, 'success');
+          await safeAuditLog(currentUser, 'ADMIN_APPROVE_LEAGUE', { app_id: appId, status, timestamp: getFormattedDateTime() });
           fetchAllAdminData();
         }
       };
@@ -1460,19 +1731,19 @@
         }
       };
 
-      const pendingApplications = applications.filter(a => a.status === 'Pending');
-      const processedApplications = applications.filter(a => a.status === 'Approved' || a.status === 'Declined');
-      const pendingCount = pendingApplications.length;
-      const approvedCount = applications.filter(a => a.status === 'Approved').length;
+      const pendingLeagueProposals = applications.filter(a => a.status === 'Pending' && a.athlete_name && a.athlete_name.startsWith('LIGA:'));
+      const processedLeagueProposals = applications.filter(a => (a.status === 'Approved' || a.status === 'Declined') && a.athlete_name && a.athlete_name.startsWith('LIGA:'));
+      const pendingCount = pendingLeagueProposals.length;
+      const approvedCount = applications.filter(a => a.status === 'Approved' && a.athlete_name && a.athlete_name.startsWith('LIGA:')).length;
 
       return (
-        <div className="p-4 md:p-6 space-y-5 md:space-y-6 animate-pop-in[cite: 21]">
+        <div className="p-4 md:p-6 space-y-5 md:space-y-6 animate-pop-in">
           {loading ? (
             <LoadingSpinner label="Fetching system data..." />
           ) : (
             <>
               {adminTab === 'metrics' && (
-                <div className="space-y-4 animate-pop-in[cite: 21]">
+                <div className="space-y-4 animate-pop-in">
                   <h3 className="text-xs font-bold font-heading text-white border-b border-[#FF7A00]/20 pb-2">
                     📊 League Metrics
                   </h3>
@@ -1484,12 +1755,12 @@
                     </div>
 
                     <div className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-2xl text-center space-y-1 shadow-lg">
-                      <p className="text-[10px] text-slate-400 font-heading">Pending Rosters</p>
+                      <p className="text-[10px] text-slate-400 font-heading">Pending Leagues</p>
                       <p className="text-xl font-black font-mono text-[#FFC700]">{pendingCount}</p>
                     </div>
 
                     <div className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-2xl text-center space-y-1 shadow-lg">
-                      <p className="text-[10px] text-slate-400 font-heading">Approved Rosters</p>
+                      <p className="text-[10px] text-slate-400 font-heading">Approved Leagues</p>
                       <p className="text-xl font-black font-mono text-emerald-400">{approvedCount}</p>
                     </div>
 
@@ -1500,12 +1771,12 @@
                   </div>
 
                   <div className="space-y-2 pt-2">
-                    <h4 className="text-[11px] font-bold font-heading text-slate-300">Approved & Declined Leagues / Courts</h4>
-                    {processedApplications.length === 0 ? (
-                      <p className="text-[11px] text-slate-400 py-4 text-center bg-[#13093B]/40 rounded-2xl border border-white/5">No processed items yet.</p>
+                    <h4 className="text-[11px] font-bold font-heading text-slate-300">Approved & Declined Leagues</h4>
+                    {processedLeagueProposals.length === 0 ? (
+                      <p className="text-[11px] text-slate-400 py-4 text-center bg-[#13093B]/40 rounded-2xl border border-white/5">No processed league proposals yet.</p>
                     ) : (
                       <div className="space-y-2 max-h-[240px] md:max-h-none overflow-y-auto pr-1">
-                        {processedApplications.map((app) => (
+                        {processedLeagueProposals.map((app) => (
                           <div key={app.id} className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/20 rounded-2xl flex items-center justify-between gap-2 shadow-sm">
                             <div className="space-y-0.5 truncate">
                               <p className="font-bold text-xs font-heading text-white truncate">{app.athlete_name}</p>
@@ -1521,7 +1792,7 @@
               )}
 
               {adminTab === 'add_court' && (
-                <div className="space-y-4 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-5 shadow-xl animate-pop-in[cite: 21]">
+                <div className="space-y-4 bg-[#13093B]/80 border border-[#FF7A00]/30 rounded-3xl p-5 shadow-xl animate-pop-in">
                   <div className="border-b border-[#FF7A00]/20 pb-2">
                     <h3 className="text-xs font-bold font-heading text-white">🏟️ Add Sports Court / Venue</h3>
                     <p className="text-[10px] text-slate-400">Register a new playing court for Ormoc tournaments</p>
@@ -1584,7 +1855,7 @@
               )}
 
               {adminTab === 'users' && (
-                <div className="space-y-3 animate-pop-in[cite: 21]">
+                <div className="space-y-3 animate-pop-in">
                   <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
                     <h3 className="text-xs font-bold font-heading text-white">👥 User Accounts Management</h3>
                     <button onClick={fetchAllAdminData} className="app-press text-[10px] text-[#FF7A00] font-heading">Refresh</button>
@@ -1622,23 +1893,23 @@
               )}
 
               {adminTab === 'approvals' && (
-                <div className="space-y-3 animate-pop-in[cite: 21]">
+                <div className="space-y-3 animate-pop-in">
                   <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
-                    <h3 className="text-xs font-bold font-heading text-white">⚡ Master Roster Approvals</h3>
+                    <h3 className="text-xs font-bold font-heading text-white">⚡ League Approvals</h3>
                     <button onClick={fetchAllAdminData} className="app-press text-[10px] text-[#FF7A00] font-heading">Refresh</button>
                   </div>
 
-                  {pendingApplications.length === 0 ? (
-                    <p className="text-xs text-slate-400 py-16 text-center">No pending approvals remaining.</p>
+                  {pendingLeagueProposals.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-16 text-center">No pending league proposals remaining.</p>
                   ) : (
                     <div className="space-y-2 max-h-[420px] md:max-h-none overflow-y-auto pr-1">
-                      {pendingApplications.map((app) => (
+                      {pendingLeagueProposals.map((app) => (
                         <div key={app.id} className="p-3 bg-[#13093B]/80 border border-[#FF7A00]/20 rounded-2xl space-y-2 text-xs shadow-sm">
                           <div className="flex justify-between items-start">
                             <div>
                               <p className="font-bold font-heading text-white">{app.athlete_name}</p>
                               <p className="text-[10px] text-slate-400">{app.tournament_category}</p>
-                              {app.contact_number && <p className="text-[10px] text-slate-300 mt-0.5">Contact/Req: {app.contact_number}</p>}
+                              {app.contact_number && <p className="text-[10px] text-slate-300 mt-0.5">Details: {app.contact_number}</p>}
                             </div>
                             <StatusBadge status={app.status} />
                           </div>
@@ -1655,7 +1926,7 @@
               )}
 
               {adminTab === 'logs' && (
-                <div className="space-y-3 animate-pop-in[cite: 21]">
+                <div className="space-y-3 animate-pop-in">
                   <div className="flex justify-between items-center border-b border-[#FF7A00]/20 pb-2">
                     <h3 className="text-xs font-bold font-heading text-white">🛡️ Municipal Audit Log Trail</h3>
                     <button onClick={fetchAllAdminData} className="app-press text-[10px] text-[#FF7A00] font-heading">Refresh</button>
