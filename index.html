@@ -113,6 +113,18 @@
       }
     };
 
+    const getCachedFileUrl = (fileName) => {
+      if (!fileName) return null;
+      if (window._appFilePreviews && window._appFilePreviews[fileName]) {
+        return window._appFilePreviews[fileName];
+      }
+      try {
+        const stored = localStorage.getItem('app_preview_' + fileName);
+        if (stored) return stored;
+      } catch(e) {}
+      return null;
+    };
+
     const safeAuditLog = async (currentUser, action, details = {}) => {
       try {
         if (!currentUser) return;
@@ -744,31 +756,44 @@
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
         canvas.toBlob((blob) => {
-          const file = new File([blob], `camera_capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
-          const previewUrl = URL.createObjectURL(blob);
-          const fileWithPreview = Object.assign(file, { previewUrl });
-          
-          if (!window._appFilePreviews) window._appFilePreviews = {};
-          window._appFilePreviews[file.name] = previewUrl;
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const dataUrl = reader.result;
+            const file = new File([blob], `camera_capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            const fileWithPreview = Object.assign(file, { previewUrl: dataUrl });
+            
+            if (!window._appFilePreviews) window._appFilePreviews = {};
+            window._appFilePreviews[file.name] = dataUrl;
+            try {
+              localStorage.setItem('app_preview_' + file.name, dataUrl);
+            } catch(e) {}
 
-          setRequirementFiles(prev => [...prev, fileWithPreview]);
-          showNotification('Photo captured and attached!', 'success');
-          stopCamera();
+            setRequirementFiles(prev => [...prev, fileWithPreview]);
+            showNotification('Photo captured and attached!', 'success');
+            stopCamera();
+          };
+          reader.readAsDataURL(blob);
         }, 'image/jpeg', 0.9);
       };
 
       const handleFilesSelected = (e) => {
         const filesList = Array.from(e.target.files);
         if (filesList.length > 0) {
-          const mappedFiles = filesList.map(file => {
-            const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
-            if (previewUrl) {
+          filesList.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const dataUrl = event.target.result;
               if (!window._appFilePreviews) window._appFilePreviews = {};
-              window._appFilePreviews[file.name] = previewUrl;
-            }
-            return Object.assign(file, { previewUrl });
+              window._appFilePreviews[file.name] = dataUrl;
+              try {
+                localStorage.setItem('app_preview_' + file.name, dataUrl);
+              } catch(e) {}
+
+              const fileWithPreview = Object.assign(file, { previewUrl: dataUrl });
+              setRequirementFiles(prev => [...prev, fileWithPreview]);
+            };
+            reader.readAsDataURL(file);
           });
-          setRequirementFiles(prev => [...prev, ...mappedFiles]);
           showNotification(`${filesList.length} file(s) attached successfully!`, 'success');
         }
       };
@@ -1054,7 +1079,7 @@
                     onClick={capturePhoto} 
                     className="app-press py-2.5 bg-[#FF7A00] hover:bg-orange-500 text-slate-950 font-black font-heading rounded-xl text-xs shadow-lg"
                   >
-                    Capture Photo 📸
+                    Capture Photo 📷
                   </button>
                 </div>
               </div>
@@ -1070,21 +1095,25 @@
                   <button onClick={() => setPreviewFile(null)} className="app-press text-slate-400 hover:text-white font-bold p-1 rounded-lg">✕</button>
                 </div>
 
-                <div className="w-full max-h-[50vh] bg-[#0B032D] rounded-2xl border border-[#FF7A00]/30 p-3 flex items-center justify-center overflow-hidden">
-                  {previewFile.previewUrl ? (
-                    <img src={previewFile.previewUrl} alt="Preview" className="max-h-[45vh] w-auto rounded-xl object-contain shadow-md" />
-                  ) : (
-                    <div className="py-6 space-y-2">
-                      <div className="w-48 h-36 bg-gradient-to-br from-[#FF7A00]/30 to-[#13093B] border border-[#FF7A00]/40 rounded-xl mx-auto flex flex-col items-center justify-center shadow-inner p-3">
-                        <span className="text-2xl mb-1">🪪</span>
-                        <p className="text-[10px] text-white font-bold font-heading">Ormoc Sports ID / Eligibility Proof</p>
-                        <p className="text-[9px] text-[#FF7A00] font-mono mt-1">Verified Document</p>
-                      </div>
-                    </div>
-                  )}
+                <div className="w-full h-64 bg-[#0B032D] rounded-2xl border border-[#FF7A00]/30 p-4 flex flex-col items-center justify-center space-y-3 relative overflow-hidden shadow-inner">
+                  {(() => {
+                    const activeUrl = getCachedFileUrl(previewFile.name);
+                    if (activeUrl) {
+                      return <img src={activeUrl} alt="Preview" className="w-full h-full rounded-xl object-contain shadow-md" />;
+                    }
+                    return (
+                      <>
+                        <div className="w-16 h-16 bg-[#FF7A00]/10 border border-[#FF7A00]/30 rounded-2xl flex items-center justify-center text-[#FF7A00] text-3xl shadow-lg">
+                          📷
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold font-heading text-white">Participant Verification Photo</p>
+                          <p className="text-[11px] font-mono text-[#FF7A00]">{previewFile.name}</p>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
-
-                <p className="text-[11px] font-mono text-[#FF7A00] truncate">{previewFile.name}</p>
 
                 <button 
                   type="button" 
@@ -1121,7 +1150,7 @@
       // Detailed View Modal for Team Registration Request
       const [inspectingRequest, setInspectingRequest] = React.useState(null);
 
-      // File Preview Modal for Organizer Inspection
+      // File Preview Modal State for Organizer
       const [inspectPreviewFile, setInspectPreviewFile] = React.useState(null);
 
       // Court Reservation Form Modal State
@@ -1402,21 +1431,25 @@
                   <button onClick={() => setInspectPreviewFile(null)} className="app-press text-slate-400 hover:text-white font-bold p-1 rounded-lg">✕</button>
                 </div>
 
-                <div className="w-full max-h-[50vh] bg-[#0B032D] rounded-2xl border border-[#FF7A00]/30 p-3 flex items-center justify-center overflow-hidden">
-                  {window._appFilePreviews && window._appFilePreviews[inspectPreviewFile] ? (
-                    <img src={window._appFilePreviews[inspectPreviewFile]} alt="Preview" className="max-h-[45vh] w-auto rounded-xl object-contain shadow-md" />
-                  ) : (
-                    <div className="py-4 space-y-2">
-                      <div className="w-56 h-40 bg-gradient-to-br from-[#FF7A00]/20 via-[#13093B] to-slate-900 border border-[#FF7A00]/40 rounded-xl mx-auto flex flex-col items-center justify-center shadow-inner p-4 space-y-2">
-                        <span className="text-3xl">📷</span>
-                        <p className="text-[11px] text-white font-bold font-heading">Participant Verification Photo</p>
-                        <p className="text-[9px] text-[#FF7A00] font-mono truncate max-w-[200px]">{inspectPreviewFile}</p>
-                      </div>
-                    </div>
-                  )}
+                <div className="w-full h-64 bg-[#0B032D] rounded-2xl border border-[#FF7A00]/30 p-4 flex flex-col items-center justify-center space-y-3 relative overflow-hidden shadow-inner">
+                  {(() => {
+                    const activeUrl = getCachedFileUrl(inspectPreviewFile);
+                    if (activeUrl) {
+                      return <img src={activeUrl} alt="Preview" className="w-full h-full rounded-xl object-contain shadow-md" />;
+                    }
+                    return (
+                      <>
+                        <div className="w-16 h-16 bg-[#FF7A00]/10 border border-[#FF7A00]/30 rounded-2xl flex items-center justify-center text-[#FF7A00] text-3xl shadow-lg">
+                          📷
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold font-heading text-white">Participant Verification Photo</p>
+                          <p className="text-[11px] font-mono text-[#FF7A00]">{inspectPreviewFile}</p>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
-
-                <p className="text-[11px] font-mono text-[#FF7A00] truncate">{inspectPreviewFile}</p>
 
                 <button 
                   type="button" 
